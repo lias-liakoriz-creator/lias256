@@ -1,0 +1,36 @@
+<?php
+include 'includes/session.php';
+
+if (isset($_POST['id'])) {
+    $id = $_POST['id'];
+
+    // Query to get the number of positions from the positions table
+    $sql = "SELECT * FROM positions";
+    $pquery = $conn->query($sql);
+
+    $output = array('error' => false);
+
+    // Query to get the specific position by its id
+    $sql = "SELECT * FROM positions WHERE position_id = '$id'";
+    $query = $conn->query($sql);
+    $row = $query->fetch_assoc();
+
+    // Increment the priority to move the position down
+    $priority = $row['priority'] + 1;
+
+    // Check if the position is already at the bottom
+    if ($priority > $pquery->num_rows) {
+        $output['error'] = true;
+        $output['message'] = 'This position is already at the bottom';
+    } else {
+        // Update the position that currently holds the target priority
+        $sql = "UPDATE positions SET priority = priority - 1 WHERE priority = '$priority'";
+        $conn->query($sql);
+
+        // Update the selected position's priority
+        $sql = "UPDATE positions SET priority = '$priority' WHERE position_id = '$id'";
+        $conn->query($sql);
+    }
+
+    echo json_encode($output);
+}
